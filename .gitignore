@@ -1,0 +1,15 @@
+# Données téléchargées (lourdes et faciles à retélécharger)
+data/
+
+# Secrets et clés à ne jamais envoyer sur GitHub
+.env
+*.json
+
+# Fichiers générés par Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Fichiers générés par Jupyter
+.ipynb_checkpoints/
