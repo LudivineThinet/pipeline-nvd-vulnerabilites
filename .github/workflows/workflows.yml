@@ -38,4 +38,4 @@ jobs:
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/cle-google.json" >> "$GITHUB_ENV"
 
       - name: Lancer le pipeline
-        run: python src/main.py
+        run: python -u src/main.py
