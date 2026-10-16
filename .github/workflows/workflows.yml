@@ -1,0 +1,41 @@
+# ______________________________________________________________
+# Pipeline NVD : exécution automatique
+# Se lance chaque jour à 06h00 UTC et à la demande (bouton Run workflow).
+# ______________________________________________________________
+
+name: Pipeline NVD vers BigQuery
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      # La clé Google est stockée dans les secrets du repo (jamais dans le code).
+      # Elle est écrite dans un fichier temporaire du serveur, supprimé à la fin du job.
+      - name: Préparer la clé Google
+        env:
+          CLE_GOOGLE: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          printf '%s' "$CLE_GOOGLE" > "$RUNNER_TEMP/cle-google.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/cle-google.json" >> "$GITHUB_ENV"
+
+      - name: Lancer le pipeline
+        run: python src/main.py
