@@ -81,6 +81,24 @@ Le dictionnaire des types de défaut. La clé est `code_cwe`.
 
 Une faille peut toucher plusieurs produits et avoir plusieurs types de défaut. Pour compter des failles il faut donc utiliser `COUNT(DISTINCT identifiant_cve)`.
 
+## La vue de travail `v_failles_detail`
+
+Le dashboard Looker Studio ne lit pas les 4 tables séparément. Il lit une vue qui les joint (fichier `sql/00_vue_failles_detail.sql`). Ainsi tous les filtres (période, gravité, origine de l'attaque, éditeur, type de défaut) s'appliquent sur toutes les pages.
+
+La vue contient une ligne par faille, par produit et par type de défaut (231 050 lignes au 17 octobre 2026). Elle reprend toutes les colonnes de `vulnerabilites` et ajoute celles-ci.
+
+| Colonne | Contenu |
+|---|---|
+| `editeur`, `produit` | Éditeur et produit touchés (vides pour une faille sans produit) |
+| `produit_complet` | Éditeur et produit réunis. Vide si l'un des deux est « non renseigné ». Sert à compter les produits distincts (31 936 au 17 octobre) |
+| `code_cwe` | Type de défaut, y compris « non précisé » |
+| `code_cwe_precis` | Type de défaut. Vide pour « non précisé ». Sert à compter les types présents (665 au 17 octobre) |
+| `nom_cwe` | Nom du type de défaut donné par MITRE |
+| `premiere_ligne` | Vaut 1 sur une seule ligne par faille. Sa somme donne le nombre de failles sans doublon |
+| `score_faille` | Score de la faille sur sa première ligne seulement. Sa moyenne donne un score moyen juste |
+
+Comme une faille apparaît sur plusieurs lignes il faut utiliser `premiere_ligne` et `score_faille` pour compter les failles et calculer le score moyen.
+
 ## Règles de nettoyage
 
 Ces règles ont été décidées dans le notebook d'exploration (`notebooks/exploration_api.ipynb`) et sont appliquées par `src/transformation.py`.
@@ -103,4 +121,4 @@ Ces règles ont été décidées dans le notebook d'exploration (`notebooks/expl
 - Environ 10 % des failles n'ont pas de note CVSS 3.1. Beaucoup sont récentes et attendent encore l'analyse du NVD. D'autres ont le statut Deferred. Le NVD ne les traite pas en priorité.
 - Environ 8 % des failles n'ont pas de type de défaut précis.
 - 25 codes CWE utilisés par les failles n'existent pas dans le catalogue MITRE. Leur nom est « Nom non trouvé dans le catalogue ».
-- Les tables sont dans le bac à sable gratuit de BigQuery. Elles expirent au bout de 60 jours et il est impossible de modifier une ligne. Le pipeline supprime et recrée donc les tables entières à chaque exécution, ce qui remet aussi le compteur de 60 jours à zéro.
+- Les tables sont dans le bac à sable gratuit de BigQuery. Elles expirent au bout de 60 jours et il est impossible de modifier une ligne. Le pipeline supprime et recrée donc les tables entières à chaque exécution, ce qui remet aussi le compteur de 60 jours à zéro. La vue `v_failles_detail` expire elle aussi au bout de 60 jours.
